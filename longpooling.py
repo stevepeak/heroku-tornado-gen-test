@@ -17,10 +17,10 @@ def blocking_task(n):
 	return n
  
 class LongPoolingHandler(RequestHandler):
-    @asynchronous
-    def get(self):
-	    run_background(blocking_task, self.on_complete, (10,))
+	@asynchronous
+	def get(self):
+		run_background(blocking_task, self.on_complete, (int(self.get_argument('sleep',10)),)
  
-    def on_complete(self, res):
-	    self.write("Test {0}<br/>".format(res))
-	    self.finish()
+	def on_complete(self, res):
+		self.write("Test for sleeping {0} seconds finished.<br/>".format(res))
+		self.finish()
