@@ -1,26 +1,39 @@
-from time import sleep
+import time
 from tornado.httpserver import HTTPServer
 from tornado.ioloop import IOLoop
 from tornado.web import Application, asynchronous, RequestHandler
 from multiprocessing.pool import ThreadPool
  
-_workers = ThreadPool(10)
+
+"""
+The number of workers in the thread pool will effect
+the response rate.
+"""
+_workers = ThreadPool(40)
+
+
  
 def run_background(func, callback, args=(), kwds={}):
-	def _callback(result):
-		IOLoop.instance().add_callback(lambda: callback(result))
+	def _callback(results):
+		IOLoop.instance().add_callback(lambda: callback(*results))
 	_workers.apply_async(func, args, kwds, _callback)
- 
+
+
 # blocking task like querying to MySQL
-def blocking_task(n):
-	sleep(n)
-	return n
+def blocking_task(n, t):
+	time.sleep(n)
+	return n, t
  
 class LongPoolingHandler(RequestHandler):
 	@asynchronous
 	def get(self):
-		run_background(blocking_task, self.on_complete, (int(self.get_argument('sleep',10)),))
+		sleepfor, t = int(self.get_argument('sleep',10)), time.time()
+		self.write('Waiting for %d seconds...' % sleepfor)
+		self.flush()
+		run_background(blocking_task, self.on_complete, (sleepfor,t))
  
-	def on_complete(self, res):
-		self.write("Test for sleeping {0} seconds finished.<br/>".format(res))
+	def on_complete(self, sleepfor, t):	
+		#_workers.apply_async(self.application.librato.send_gauge_value, 
+		#	('py-test-gauge', (time.time()-t-float(sleepfor))*100))
+		self.write("\n\t%d seconds fin buffer: +%s" % (sleepfor, str(time.time()-t-sleepfor)))
 		self.finish()
