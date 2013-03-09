@@ -1,3 +1,4 @@
 psycopg2==2.4.5
 Tornado==2.4.1
 newrelic
+librato==0.2.7
