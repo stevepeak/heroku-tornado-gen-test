@@ -16,18 +16,9 @@ application = tornado.web.Application([
 	(r"/", MainHandler)
 ])
 
-application.librato = librato.LibratoConnection('app11478021@heroku.com', 'be8a47364abd1c426a83628fb8b37cef6efc78abf00afd98692176812ed3e171')
+application.librato = librato.LibratoConnection(os.environ.get('LIBRATO_USER'), os.environ.get('LIBRATO_TOKEN'))
 
 if __name__ == '__main__':
-	print """
-python-sample
-
-http://localhost:5000/
-	gen-async
-		?uri=<http://example.com>
-	long-pool
-		?sleep=<10>
-	"""
 	try:
 		http_server = tornado.httpserver.HTTPServer(application)
 		http_server.listen(int(os.environ.get('PORT',5000)))
